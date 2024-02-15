@@ -473,6 +473,10 @@ class Connection:
         try:
             del self.cache[tag]
         except: pass
+    
+    def commit(self) -> None:
+        self._commit_ops()
+        self._do_backup()
 
 
 def connect(path: str, data_format: tuple[str]=DataContent.dformat) -> Connection:

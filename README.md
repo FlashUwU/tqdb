@@ -14,7 +14,7 @@ pip install git+https://github.com/FlashUwU/tqdb.git
 ```
 
 ## Quick Start
-1. Create a file for stroing data `your_file_name.data`
+1. Create a file for stroing data -> `your_file_name.data`
 2. Run the following python codes:
 ```python
 from tqdb import connect, DataContent
