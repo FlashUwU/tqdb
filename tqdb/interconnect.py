@@ -71,14 +71,17 @@ class Connection:
         os.rename(self.path, init_filepath)
 
         init_file = open(init_filepath, "rb")
+        new_backup = 0
         if not os.path.exists(self.backup_filepath):
+            new_backup = 1
             with open(self.backup_filepath, "wb") as backup_file:
                 backup_file.write(b"\x05")
+
         backup_file = open(self.backup_filepath, "rb")
         data_file = open(self.path, "ab")
 
         solution = -1
-        if os.path.getsize(init_filepath) != os.path.getsize(self.backup_filepath):
+        if os.path.getsize(init_filepath) != os.path.getsize(self.backup_filepath)-new_backup:
             solution = int(input("backup_file size is different with org_file, make a solution:"))
 
         reading_indexline = True
