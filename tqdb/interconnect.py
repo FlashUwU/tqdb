@@ -73,7 +73,7 @@ class Connection:
         init_file = open(init_filepath, "rb")
         if not os.path.exists(self.backup_filepath):
             with open(self.backup_filepath, "wb") as backup_file:
-                backup_file.write(b"\n")
+                backup_file.write(b"\x05")
         backup_file = open(self.backup_filepath, "rb")
         data_file = open(self.path, "ab")
 
@@ -88,7 +88,7 @@ class Connection:
             bbyte = backup_file.read(1)
             if not (byte := init_file.read(1)):
                 if reading_indexline:
-                    data_file.write(b"\n")
+                    data_file.write(b"\x05")
                     self.indexlinelen += 1
                 break
 
@@ -102,7 +102,7 @@ class Connection:
                 if byte == b"\r":
                     continue
 
-                elif byte == b"\n":
+                elif byte == b"\x05":
                     reading_indexline = False
 
                 data_file.write(byte)
@@ -124,7 +124,7 @@ class Connection:
             while True:
                 byte = data_file.read(1)
 
-                if byte == b"\n":
+                if byte == b"\x05":
                     break
 
                 if not byte:
@@ -165,8 +165,8 @@ class Connection:
                 break
 
             if reading_indexline:
-                if byte == b"\n":
-                    byte = newindex+b"\n"
+                if byte == b"\x05":
+                    byte = newindex+b"\x05"
                     reading_indexline = False
 
                 data_file.write(byte)
@@ -211,8 +211,8 @@ class Connection:
                 break
 
             if reading_indexline:
-                if byte == b"\n":
-                    data_file.write(b"\n")
+                if byte == b"\x05":
+                    data_file.write(b"\x05")
                     reading_indexline = False
                     is_after_target = False
                 elif byte == b"\x03":
@@ -301,8 +301,8 @@ class Connection:
                 break
 
             if reading_indexline:
-                if byte == b"\n":
-                    data_file.write(b"\n")
+                if byte == b"\x05":
+                    data_file.write(b"\x05")
                     reading_indexline = False
                 elif byte == b"\x03":
                     if is_target:
@@ -369,7 +369,7 @@ class Connection:
                 if byte == b"\x04":
                     op.append(buffer)
                     buffer = b""
-                elif byte == b"\n":
+                elif byte == b"\x05":
                     match op[0]:
                         case b"\x2b":
                             self.__append(op[1:])
@@ -441,7 +441,7 @@ class Connection:
             op = (
                 b"\x2b\x04"+
                 tool.dec_to_base250(tag)+b"\x04"
-                +data_content.data+b"\x04\n"
+                +data_content.data+b"\x04\x05"
             )
             data_file.write(op)
 
@@ -455,7 +455,7 @@ class Connection:
             op = (
                 b"\x3d\x04"+
                 tool.dec_to_base250(tag)+b"\x04"
-                +data_content.data+b"\x04\n"
+                +data_content.data+b"\x04\x05"
             )
             data_file.write(op)
     
@@ -466,7 +466,7 @@ class Connection:
         with open(self.ops_filepath, "ab") as data_file:
             op = (
                 b"\x2d\x04"+
-                tool.dec_to_base250(tag)+b"\x04\n"
+                tool.dec_to_base250(tag)+b"\x04\x05"
             )
             data_file.write(op)
         
