@@ -78,6 +78,7 @@ class Connection:
             init_file.close()
             backup_file.close()
             data_file.close()
+            os.remove(self.path)
             os.rename(self.init_filepath, self.path)
         
         def when_done():
