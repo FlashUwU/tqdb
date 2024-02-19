@@ -464,7 +464,8 @@ class Connection:
         self.push(self.cache, self.cache_size, tag, data_content)
         return data_content
 
-    def insert(self, tag:int, data_content: DataContent) -> None:
+    def insert(self, data_content: DataContent) -> None:
+        tag = data_content.tag
         if tag in self.indexes or self._get_indexes(target=tag):
             raise Exception(f"tag number has already been use: {tag}")
 
@@ -478,7 +479,8 @@ class Connection:
 
         self.push(self.cache, self.cache_size, tag, data_content)
     
-    def replace(self, tag:int, data_content: DataContent) -> None:
+    def replace(self, data_content: DataContent) -> None:
+        tag = data_content.tag
         if not (self.indexes.get(tag) or self._get_indexes(target=tag)):
             raise Exception(f"tag number isn't exist: {tag}")
 

@@ -23,7 +23,7 @@ data_format = ("name", "pass")
 tqdb = connect("your_file_name.data", data_format)
 
 # Insert Data
-tqdb.insert(1, DataContent(1, ("flash", "1qaz2wsx")))
+tqdb.insert(DataContent(1, ("flash", "1qaz2wsx")))
 tqdb.commit()
 
 # Fetch Data
@@ -31,7 +31,7 @@ user = tqdb.fetch(1)
 print(user) # output: {"name": b"flash", b"1qaz2wsx"}
 
 # Replace Data
-tqdb.replace(1, DataContent(1, ("flashuwu", "1234")))
+tqdb.replace(DataContent(1, ("flashuwu", "1234")))
 tqdb.commit()
 print(tqdb.fetch(1)) # output: {"name": b"flashuwu", b"1234"}
 
