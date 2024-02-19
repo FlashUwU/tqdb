@@ -391,29 +391,31 @@ class Connection:
         buffer = b""
         op = []
 
-        with open(self.ops_filepath, "rb") as ops_file:
-            while True:
-                if not (byte := ops_file.read(1)):
-                    os.remove(self.ops_filepath)
-                    break
+        ops_file = open(self.ops_filepath, "rb")
 
-                if byte == b"\x04":
-                    op.append(buffer)
-                    buffer = b""
-                elif byte == b"\x05":
-                    match op[0]:
-                        case b"\x2b":
-                            self.__append(op[1:])
-                            self.is_changed = True
-                        case b"\x3d":
-                            self.__change(op[1:])
-                            self.is_changed = True
-                        case b"\x2d":
-                            self.__remove(op[1:])
-                            self.is_changed = True
-                    op.clear()
-                else:
-                    buffer += byte
+        while True:
+            if not (byte := ops_file.read(1)):
+                ops_file.close()
+                os.remove(self.ops_filepath)
+                break
+
+            if byte == b"\x04":
+                op.append(buffer)
+                buffer = b""
+            elif byte == b"\x05":
+                match op[0]:
+                    case b"\x2b":
+                        self.__append(op[1:])
+                        self.is_changed = True
+                    case b"\x3d":
+                        self.__change(op[1:])
+                        self.is_changed = True
+                    case b"\x2d":
+                        self.__remove(op[1:])
+                        self.is_changed = True
+                op.clear()
+            else:
+                buffer += byte
     
     def _get_indexes(self, size: int=-1, target: int=None) -> Union[tuple[int], None]:
         for I, aset in enumerate(self.__indexes_scanner()):
