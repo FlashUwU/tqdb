@@ -4,10 +4,14 @@ Notes:
 backup_file/ops_file checking function will be call in main loop, and the first time of built of the connection
 
 read one-by-one and write one by one can save the ram
+
+decrease the latency of inserting data and fetching data
+
+encrypts password
 """
 from typing import Union, Generator, Iterable
 
-import os
+import os, shutil
 
 import tqdb.utils as tool
 
@@ -50,6 +54,7 @@ class Connection:
         self.read_size = 100
 
         self.filename = self.splited_path[-1]
+        self.init_filepath = "/".join(self.splited_path[:-1]+[self.filename+".init"])
         self.backup_filepath = "/".join(self.splited_path[:-1]+[self.filename+".backup"])
         self.ops_filepath = "/".join(self.splited_path[:-1]+[self.filename+".ops"])
 
@@ -61,32 +66,57 @@ class Connection:
         self.cache: dict[int, DataContent] = {}
         self.cache_size = 10
 
+        self.commit_size = 100 # operations commit size per write operation of data_file
+
         self._commit_ops()
 
     def __initialize_datafiles(self):
+        # rename orginal data_file to init_file
+        os.rename(self.path, self.init_filepath)
+
+        def close_and_nameback():
+            init_file.close()
+            backup_file.close()
+            data_file.close()
+            os.rename(self.init_filepath, self.path)
+        
+        def when_done():
+            init_file.close()
+            backup_file.close()
+            data_file.close()
+            os.remove(self.init_filepath)
+        
+        def solve_crash(solution: int):
+            if solution:
+                os.remove(self.path)
+                shutil.copy(self.backup_filepath, self.path)
+            else:
+                os.remove(self.backup_filepath)
+                shutil.copy(self.path, self.backup_filepath)
+            self.__initialize_datafiles()
+
         self.indexlinelen = 0
         self.indexeslen = 0
 
-        init_filepath = "/".join(self.splited_path[:-1]+[self.filename+".init"])
-        os.rename(self.path, init_filepath)
-
-        init_file = open(init_filepath, "rb")
-        new_backup = 0
+        # copy one if backup_file not exists
         if not os.path.exists(self.backup_filepath):
-            new_backup = 1
-            with open(self.backup_filepath, "wb") as backup_file:
-                backup_file.write(b"\x05")
+            shutil.copy(self.init_filepath, self.backup_filepath)
 
+        # open [init_file(read)] [backup_file(read)] [new_data_file(write)]
+        init_file = open(self.init_filepath, "rb")
         backup_file = open(self.backup_filepath, "rb")
         data_file = open(self.path, "ab")
 
-        solution = -1
-        if os.path.getsize(init_filepath) != os.path.getsize(self.backup_filepath)-new_backup:
-            solution = int(input("backup_file size is different with org_file, make a solution:"))
+        # check the size of init_file and backup_file
+        if os.path.getsize(self.init_filepath) != os.path.getsize(self.backup_filepath):
+            close_and_nameback()
+            solve_crash(int(input("Backup_File size is different with Org_File size, make a solution.\n(0) use org_file (1) use backup_file :")))
+            return
 
         reading_indexline = True
         pointer = 0
 
+        # write bytes to data_file from init_file with checking
         while True:
             bbyte = backup_file.read(1)
             if not (byte := init_file.read(1)):
@@ -96,7 +126,10 @@ class Connection:
                 break
 
             if bbyte != byte:
-                solution = int(input(f"Warn: {pointer}:bkp[{bbyte}]-org[{byte}], make a solution:"))
+                close_and_nameback()
+                solve_crash(int(input(f"Diff: {pointer}(location) Bkp[{bbyte}]-Org[{byte}], make a solution.\n(0) use org_file (1) use backup_file :")))
+                return
+
             pointer+=1
 
             if reading_indexline:
@@ -110,14 +143,10 @@ class Connection:
 
                 data_file.write(byte)
                 continue
-            
-            data_file.write(byte)
-        
-        init_file.close()
-        data_file.close()
-        os.remove(init_filepath)
 
-        if not solution: raise Exception("backup_file crashed with org_file")
+            data_file.write(byte)
+
+        when_done() 
     
     def __indexes_scanner(self) -> Generator:
         with open(self.path, "rb") as data_file:
@@ -361,12 +390,11 @@ class Connection:
 
         buffer = b""
         op = []
-        empty = False
 
         with open(self.ops_filepath, "rb") as ops_file:
             while True:
                 if not (byte := ops_file.read(1)):
-                    empty = True
+                    os.remove(self.ops_filepath)
                     break
 
                 if byte == b"\x04":
@@ -386,9 +414,6 @@ class Connection:
                     op.clear()
                 else:
                     buffer += byte
-
-        if empty:
-            os.remove(self.ops_filepath)
     
     def _get_indexes(self, size: int=-1, target: int=None) -> Union[tuple[int], None]:
         for I, aset in enumerate(self.__indexes_scanner()):
