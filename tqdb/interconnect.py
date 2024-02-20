@@ -453,7 +453,7 @@ class Connection:
         
         box[tag] = thing
 
-    def fetch(self, tag: int, /, dataclass: Callable[[int, Union[bytes, Iterable], tuple[str]], _D]=DataContent):
+    def fetch(self, tag: int, /, dataclass: Callable[[int, Union[bytes, Iterable], tuple[str]], _D]=DataContent) -> Union[DataContent, _D]:
         if data_content := self.cache.get(tag):
             return data_content
 
