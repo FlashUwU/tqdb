@@ -18,7 +18,7 @@ import tqdb.utils as tool
 class DataContent:
     dformat = ("tag", "content")
 
-    def __init__(self, tag: int, content: Union[bytes, Iterable], data_format: tuple[str]=dformat) -> None:
+    def __init__(self, tag: int, content: Union[bytes, Iterable], /, data_format: tuple[str]=dformat) -> None:
         self.tag = tag
 
         self.replace(content)
@@ -450,16 +450,16 @@ class Connection:
         
         box[tag] = thing
 
-    def fetch(self, tag: int) -> DataContent:
+    def fetch(self, tag: int, /, dataclass=DataContent) -> DataContent:
         if data_content := self.cache.get(tag):
             return data_content
-        
+
         if not (data_range := self.fetch_index(tag)):
             raise Exception(f"tag not found: {tag}")
 
         with open(self.path, "rb") as data_file:
             data_file.seek(self.indexlinelen+data_range[0])
-            data_content = DataContent(tag, data_file.read(data_range[1]), self.data_format)
+            data_content = dataclass(tag, data_file.read(data_range[1]), self.data_format)
 
         self.push(self.cache, self.cache_size, tag, data_content)
         return data_content
