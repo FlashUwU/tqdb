@@ -9,7 +9,7 @@ decrease the latency of inserting data and fetching data
 
 encrypts password
 """
-from typing import Union, Generator, Iterable
+from typing import Union, Generator, Iterable, TypeVar
 
 import os, shutil
 
@@ -42,6 +42,8 @@ class DataContent:
         if not isinstance(content, bytes):
             self.data = tool.iter_to_data(content)
         else: self.data = content
+
+A = TypeVar("A", DataContent)
 
 class Connection:
     def __init__(self, path: str, data_format: tuple[str]) -> None:
@@ -450,7 +452,7 @@ class Connection:
         
         box[tag] = thing
 
-    def fetch(self, tag: int, /, dataclass=DataContent) -> DataContent:
+    def fetch(self, tag: int, /, dataclass=TypeVar("A", DataContent)) -> Union[DataContent, any]:
         if data_content := self.cache.get(tag):
             return data_content
 
