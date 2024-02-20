@@ -147,29 +147,7 @@ class Connection:
 
             data_file.write(byte)
 
-        when_done() 
-    
-    def __indexes_scanner(self) -> Generator:
-        with open(self.path, "rb") as data_file:
-            buffer = b""
-            aset = []
-
-            while True:
-                byte = data_file.read(1)
-
-                if byte == b"\x05":
-                    break
-
-                if not byte:
-                    raise Exception("wrong format of data-index line")
-
-                if byte == b"\x03":
-                    aset.append(buffer)
-                    buffer = b""
-                elif byte == b"\x04":
-                    yield aset
-                    aset.clear()
-                else: buffer+=byte
+        when_done()
     
     def __append(self, op: list[bytes]):
         newdata = op[1]
@@ -417,9 +395,31 @@ class Connection:
                 op.clear()
             else:
                 buffer += byte
+
+    def _indexes_scanner(self) -> Generator:
+        with open(self.path, "rb") as data_file:
+            buffer = b""
+            aset = []
+
+            while True:
+                byte = data_file.read(1)
+
+                if byte == b"\x05":
+                    break
+
+                if not byte:
+                    raise Exception("wrong format of data-index line")
+
+                if byte == b"\x03":
+                    aset.append(buffer)
+                    buffer = b""
+                elif byte == b"\x04":
+                    yield aset
+                    aset.clear()
+                else: buffer+=byte
     
-    def _get_indexes(self, size: int=-1, target: int=None) -> Union[tuple[int], None]:
-        for I, aset in enumerate(self.__indexes_scanner()):
+    def _get_indexes(self, size: int=-1, target: Union[int,str] =None) -> Union[tuple[int], None]:
+        for I, aset in enumerate(self._indexes_scanner()):
             if I == size:
                 break
 
