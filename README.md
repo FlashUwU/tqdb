@@ -1,4 +1,4 @@
-> I've already stopped working on this project. This was made from an immature ideal when I still a rookie in programming, but it's interesting.
+> I've already stopped working on this project. This was made from an immature ideal when I still a rookie in programming, but it's interesting to dig into some.
 # TQDB (Taggable Query Database)
 Every dataset has its own tag. The purpose of TQDB is making the querying job be more faster and less burden on RAM. Additionally, TQDB also performs well when handling backup works.
 
