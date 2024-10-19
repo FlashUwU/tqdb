@@ -1,1 +1,1 @@
-from tqdb.interconnect import connect, Connection, DataContent, tool
+from tqdb.connection import connect, Connection, DataContent, tool
