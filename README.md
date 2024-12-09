@@ -3,7 +3,7 @@
 Every dataset has its own tag. The purpose of TQDB is making the querying job be more faster and less burden on RAM. Additionally, TQDB also performs well when handling backup works.
 
 ## Features
-- Storing Tag Index with 250base numbers.
+- Storing Tag Index with 250base numbers. (fake)
 - Auto Commitment and Checking once connected to data_file.
 - Can cope with sudden power outages
 - Personalised Data Format.
